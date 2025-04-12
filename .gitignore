@@ -15,3 +15,4 @@ wheels/
 .idea
 .vscode
 certificates
+.ruff_cache
