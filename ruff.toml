@@ -1,0 +1,14 @@
+target-version="py313"
+line-length = 79
+
+[lint]
+
+extend-select = [
+    "E501",
+    "FAST001",
+    "FAST002",
+    "FAST003",
+    "I001",
+    "I002",
+    "F401"
+]
