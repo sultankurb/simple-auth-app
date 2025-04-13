@@ -1,7 +1,14 @@
+from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import AsyncGenerator
 
+from beanie import init_beanie
+from fastapi import FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, EmailStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from src.database.models.users import UsersODM
 
 BASE_DIR = Path(__file__).parent.parent
 
@@ -24,9 +31,22 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: EmailStr = None
     auth: JWTModel = JWTModel()
 
+    async def init_database(self):
+        clent = AsyncIOMotorClient(self.DB_URL)
+        await init_beanie(
+            database=clent["auth-app"],
+            document_models=[UsersODM]
+        )
+
 
 def get_settings() -> Settings:
     return Settings()
 
 
 settings = get_settings()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    await settings.init_database()
+    yield

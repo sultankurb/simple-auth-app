@@ -2,7 +2,6 @@ from datetime import datetime, timedelta, timezone
 
 import jwt
 
-from src.database.models.users import UsersBaseModel
 from src.settings import settings
 
 
@@ -56,10 +55,10 @@ async def create_jwt(
     )
 
 
-async def create_access_token(user: UsersBaseModel):
+async def create_access_token(user: dict):
     jwt_payload = {
-        "sub": user.username,
-        "email": user.email
+        "sub": user["username"],
+        "email": user["email"]
     }
     return await create_jwt(
         token_type="access",
@@ -69,9 +68,9 @@ async def create_access_token(user: UsersBaseModel):
     )
 
 
-async def create_refresh_token(user: UsersBaseModel):
+async def create_refresh_token(user: dict):
     jwt_payload = {
-        "sub": user.email
+        "sub": user["email"]
     }
     return await create_jwt(
         token_type="refresh",
