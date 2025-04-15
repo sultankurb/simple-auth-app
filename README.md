@@ -13,14 +13,24 @@ ___
 ___
 
 
-## Instalation
+## Installation
 ### Requirments that you neeed
 * git
 * docker
 * docker compose
-## To run this project
+
+## First step is clone repository
 ```shell
-    docker compose up -d
+git clone https://github.com/sultankurb/simple-auth-app.git
 ```
 
+## Second step is 
+Create certificate that neew for authinticate
+```shell
+mkdir certificates/ && cd certificate/ && openssl genrsa -out private-key.pem 2048 && openssl rsa -in private-key.pem -outform PEM -pubout -out public-key.pem
+```
 
+## And Last Step is run this project
+```shell
+docker compose up -d
+```
