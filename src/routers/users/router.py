@@ -3,12 +3,18 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from src.database.models.users import TokenData, UsersODM, UsersRead
+from src.database.models.users import (
+    PasswordUpdate,
+    TokenData,
+    UsersODM,
+    UsersRead,
+)
 from src.services.auth.auth_logic import (
     get_active_current_user,
     register_user,
     sign_in,
     sign_out,
+    update_password,
 )
 
 users = APIRouter(
@@ -57,3 +63,14 @@ async def sign_out_one_user(
     await sign_out(response=response)
     username = user.username
     return {"Message": f"Good bye {username}"}
+
+
+@users.put(path="/update/password/")
+async def update_mine_password(
+    schema: PasswordUpdate, 
+    user: Annotated[
+        UsersODM, Depends(get_active_current_user)
+    ]
+):
+    result = await update_password(schema=schema, user=user)
+    return result

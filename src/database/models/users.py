@@ -56,3 +56,9 @@ class UsersODM(UsersCreate, Document):
 class TokenData(BaseModel):
     access_token: str = None
     refresh_token: str = None
+
+
+class PasswordUpdate(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str

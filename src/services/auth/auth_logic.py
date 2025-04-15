@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-from src.database.models.users import UsersODM
+from src.database.models.users import PasswordUpdate, RoleEnum, UsersODM
 from src.services.auth.jwt_service import (
     create_access_token,
     create_refresh_token,
@@ -40,6 +40,17 @@ async def get_active_current_user(
             status_code=status.HTTP_403_FORBIDDEN, 
             detail="You have been banned"
         )
+    return user
+
+
+async def get_admin_users(
+    user: Annotated[
+        UsersODM,
+        Depends(get_active_current_user)
+    ]
+):
+    if user.role is not RoleEnum.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
     return user
 
 
@@ -102,3 +113,35 @@ async def register_user(user: UsersODM):
     user.password = hash_password(password=user.password)
     result = await repository.add_one(data=user)
     return result
+
+
+
+async def update_password(
+    schema: PasswordUpdate,
+    user: Annotated[UsersODM, Depends(get_active_current_user)]
+):
+    if not check_password(
+        passowrd=schema.old_password,
+        hashed_password=user.password
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Incorect password"
+        )
+    if schema.new_password != schema.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password and confirn password not same"
+        )
+    data: dict = schema.model_dump()
+    new_hashed_password = hash_password(password=data.get("new_password"))
+    result = await repository.update_one(
+        filters={"username": user.username},
+        data={"password": new_hashed_password}
+    )
+    if result is True:
+        return {"Message": "Password was updated"}
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Something went wrog, try again later"
+    )

@@ -29,7 +29,7 @@ class BeanieRepository:
 
     async def update_one(self, filters: dict, data: dict) -> bool:
         result = await self.model.find_one(filters)
-        result.update({"$set": data})
+        await result.update({"$set": data})
         if result is not None:
             return True
         return False
