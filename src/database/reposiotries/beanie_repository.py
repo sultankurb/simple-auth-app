@@ -2,19 +2,20 @@ from beanie import Document
 
 
 class BeanieRepository:
-    model: Document = None
+    def __init__(self, model):
+        self.model = model
 
     async def get_all(
         self,
-        filters: dict = None
+        filters: dict
     ):
         result = await self.model.find_all(filters).to_list()
         return result
-    
+
     async def get_one(self, filters: dict):
         result = await self.model.find_one(filters)
         return result
-    
+
     @classmethod
     async def add_one(cls, data: Document):
         result = await data.save()

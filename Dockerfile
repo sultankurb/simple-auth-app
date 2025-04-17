@@ -13,4 +13,4 @@ RUN uv sync
 COPY  . /app/
 
 
-CMD uv run uvicorn main:app --reload --port 80 --host 0.0.0.0
+CMD uv run uvicorn src.main:app --reload --port 80 --host 0.0.0.0

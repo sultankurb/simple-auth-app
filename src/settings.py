@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Optional
 
 from beanie import init_beanie
 from fastapi import FastAPI
@@ -26,9 +26,9 @@ class Settings(BaseSettings):
         env_file=f"{BASE_DIR}/.env"
     )
     api_prefix: str = "/api/v1"
-    DB_URL: str = None
-    ADMIN_PASSWORD: str = None
-    ADMIN_EMAIL: EmailStr = None
+    DB_URL: Optional[str] = None
+    ADMIN_PASSWORD: Optional[str] = None
+    ADMIN_EMAIL: Optional[EmailStr] = None
     auth: JWTModel = JWTModel()
 
     async def init_database(self):

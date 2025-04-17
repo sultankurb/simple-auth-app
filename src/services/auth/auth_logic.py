@@ -4,16 +4,16 @@ from fastapi import Depends, HTTPException, Response, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 from src.database.models.users import PasswordUpdate, RoleEnum, UsersODM
+from src.database.reposiotries.beanie_repository import BeanieRepository
 from src.services.auth.jwt_service import (
     create_access_token,
     create_refresh_token,
     decode_jwt,
 )
 
-from .crud import UsersRepository
 from .hash_password import check_password, hash_password
 
-repository = UsersRepository()
+users_repository = BeanieRepository(model=UsersODM)
 
 oauth2_schema = OAuth2PasswordBearer(
     tokenUrl="/api/v1/users/login/"
@@ -25,19 +25,19 @@ async def get_current_user(
 ):
     payload = await decode_jwt(token=token)
     username: str = payload.get("sub")
-    user = await repository.get_one(filters={"username": username})
+    user = await users_repository.get_one(filters={"username": username})
     return user
 
 
 async def get_active_current_user(
     user: Annotated[
-        UsersODM, 
+        UsersODM,
         Depends(get_current_user)
     ]
 ):
     if user.is_banned is True:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="You have been banned"
         )
     return user
@@ -59,14 +59,14 @@ async def sign_in(
     form: OAuth2PasswordRequestForm = Depends()
 ):
     exception = HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, 
+        status_code=status.HTTP_400_BAD_REQUEST,
         detail="invalid username or password"
     )
-    check = await repository.get_one(filters={"username": form.username})
+    check = await users_repository.get_one(filters={"username": form.username})
     if check is None:
         raise exception
     if not check_password(
-        passowrd=form.password, 
+        passowrd=form.password,
         hashed_password=check.password
     ):
             raise exception
@@ -74,7 +74,7 @@ async def sign_in(
         user={
             "username": check.username,
             "email": check.email,
-        }    
+        }
     )
     refresh_token = await create_refresh_token(
         user={
@@ -83,13 +83,13 @@ async def sign_in(
         }
     )
     response.set_cookie(
-        key="access_token", 
-        value=f"Bearer {access_token}", 
+        key="access_token",
+        value=f"Bearer {access_token}",
         httponly=True
     )
     response.set_cookie(
-        key="refresh_token", 
-        value=f"Bearer {refresh_token}", 
+        key="refresh_token",
+        value=f"Bearer {refresh_token}",
         httponly=True
     )
     return [access_token, refresh_token]
@@ -102,7 +102,7 @@ async def sign_out(response: Response):
 
 
 async def register_user(user: UsersODM):
-    check = await repository.get_one(
+    check = await users_repository.get_one(
         filters={"username": user.username, "email": user.email}
     )
     if check is not None:
@@ -111,7 +111,7 @@ async def register_user(user: UsersODM):
             detail="username or email is already used try another"
         )
     user.password = hash_password(password=user.password)
-    result = await repository.add_one(data=user)
+    result = await users_repository.add_one(data=user)
     return result
 
 
@@ -125,7 +125,7 @@ async def update_password(
         hashed_password=user.password
     ):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Incorect password"
         )
     if schema.new_password != schema.confirm_password:
@@ -133,9 +133,8 @@ async def update_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="New password and confirn password not same"
         )
-    data: dict = schema.model_dump()
-    new_hashed_password = hash_password(password=data.get("new_password"))
-    result = await repository.update_one(
+    new_hashed_password = hash_password(password=schema.new_password)
+    result = await users_repository.update_one(
         filters={"username": user.username},
         data={"password": new_hashed_password}
     )

@@ -17,13 +17,13 @@ class UsersBaseModel(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     links: Optional[List[str]] = None
-    is_banned: Optional[bool] = None
+    is_banned: bool = False
     role: RoleEnum = RoleEnum.user
 
 
 
 class UsersCreate(UsersBaseModel):
-    password: Optional[str] = None
+    password: str
 
 
 
@@ -54,8 +54,8 @@ class UsersODM(UsersCreate, Document):
 
 
 class TokenData(BaseModel):
-    access_token: str = None
-    refresh_token: str = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
 
 
 class PasswordUpdate(BaseModel):

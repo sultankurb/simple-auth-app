@@ -33,8 +33,8 @@ async def sign_in_user(
 
 
 @users.post(
-    path="/register/new/user/", 
-    status_code=status.HTTP_201_CREATED, 
+    path="/register/new/user/",
+    status_code=status.HTTP_201_CREATED,
     response_model=UsersRead
 )
 async def register_new_user(schema: UsersODM):
@@ -45,7 +45,7 @@ async def register_new_user(schema: UsersODM):
 @users.get(path="/get/current/user/", response_model=UsersRead)
 async def get_current_user(
     user: Annotated[
-        UsersODM, 
+        UsersODM,
         Depends(get_active_current_user)
     ]
 ):
@@ -54,9 +54,9 @@ async def get_current_user(
 
 @users.post(path="/sign/out/")
 async def sign_out_one_user(
-    response: Response, 
+    response: Response,
     user: Annotated[
-        UsersODM, 
+        UsersODM,
         Depends(get_active_current_user)
         ]
     ):
@@ -65,9 +65,15 @@ async def sign_out_one_user(
     return {"Message": f"Good bye {username}"}
 
 
+@users.post(path="/upload/media/")
+async def upload_media():
+    #TODO
+    pass
+
+
 @users.put(path="/update/password/")
 async def update_mine_password(
-    schema: PasswordUpdate, 
+    schema: PasswordUpdate,
     user: Annotated[
         UsersODM, Depends(get_active_current_user)
     ]
